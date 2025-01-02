@@ -81,17 +81,38 @@ def get_active_orders(api_key):
         print(color_text("Orderan kosong bro", "red"))
         return []
 
-def monitor_sms(api_key, interval=5):
+def resend_order(api_key, order_id):
+    """
+    Fungsi untuk mengirim ulang order berdasarkan ID order.
+    """
+    url = f"https://virtusim.com/api/json.php?api_key={api_key}&action=set_status&id={order_id}&status=3"
+    response = requests.get(url)
+    result = response.json()
+
+    if result.get("status"):
+        print(color_text(f"Order {order_id} berhasil diresend.", "green"))
+    else:
+        print(color_text(f"Gagal resend order {order_id}: {result['data'].get('msg')}", "red"))
+
+
+def monitor_sms(api_key, interval=5, resend_interval=120):
+    """
+    Memantau SMS terbaru dan melakukan resend pada order yang sudah menerima SMS setiap 2 menit.
+    """
     print(color_text("Memulai pemantauan SMS terbaru...", "green"))
     latest_sms = []
     number_index = {}
+    last_resend_time = time.time()
 
     while True:
+        # Ambil order aktif
         orders = get_active_orders(api_key)
 
         if orders:
             for order in orders:
+                # Periksa jika order sudah menerima SMS
                 if order.get("status") == "Otp Diterima" and order.get("sms"):
+                    # Tampilkan detail SMS baru
                     sms_data = {
                         "number": order.get("number"),
                         "otp": order.get("otp"),
@@ -114,11 +135,22 @@ def monitor_sms(api_key, interval=5):
                         print(color_text(f"OTP: {sms_data['otp']}", "green"))
                         print(color_text(f"Service: {sms_data['service_name']}", "green"))
                         print(color_text("------------------------------------", "green"))
+
+                    # Resend order jika waktu resend terpenuhi
+                    if time.time() - last_resend_time >= resend_interval:
+                        resend_order(api_key, order["id"])
+
+            # Perbarui waktu terakhir melakukan resend
+            if time.time() - last_resend_time >= resend_interval:
+                last_resend_time = time.time()
+
         else:
             print(color_text("Tidak ada SMS baru. Memeriksa lagi...", "red"))
             number_index.clear()
 
         time.sleep(interval)
+
+
 
 def cancel_or_resend_order(api_key):
     orders = get_active_orders(api_key)
