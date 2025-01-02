@@ -1,6 +1,6 @@
 # jeksim
 
-pkg update && upgrade
+pkg update && pkg upgrade
 termux-setup-storage
 pkg install python
 pkg install python pip -y
