@@ -3,8 +3,8 @@
 pkg update && upgrade
 termux-setup-storage
 pkg install python
-pkg install pip
+pkg install python pip -y
 pip install requests
 pkg install git
-cd storage && git clone https://github.com/apengjers/jeksim/blob/main/jeksim.py
-python jeksim.py
+cd storage && git clone https://github.com/apengjers/jeksim
+cd jeksim && python jeksim.py
