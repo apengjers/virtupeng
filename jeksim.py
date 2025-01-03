@@ -203,43 +203,6 @@ def cancel_or_resend_order(api_key):
     else:
         print(color_text("Tidak ada order aktif untuk dikelola.", "red"))
 
-    orders = get_active_orders(api_key)
-
-    if orders:
-        print(color_text("Daftar Order Aktif:", "green"))
-        for idx, order in enumerate(orders, 1):
-            print(color_text(f"{idx}. ID: {order['id']} | Nomor: {order['number']}", "green"))
-
-        choice = input(color_text("Masukkan nomor order untuk Kelola (format: <nomor>): ", "green"))
-        action = input(color_text("Ketik 'batal' untuk membatalkan atau 'resend' untuk mengirim ulang: ", "green")).lower()
-
-        try:
-            order_idx = int(choice) - 1
-            order_id = orders[order_idx]["id"]
-
-            if action == "1":
-                url = f"https://virtusim.com/api/json.php?api_key={api_key}&action=set_status&id={order_id}&status=2"
-                response = requests.get(url)
-                result = response.json()
-                if result.get("status"):
-                    print(color_text(f"Order {order_id} berhasil dibatalkan.", "green"))
-                else:
-                    print(color_text(f"Gagal membatalkan order: {result['data'].get('msg')}", "red"))
-
-            elif action == "2":
-                url = f"https://virtusim.com/api/json.php?api_key={api_key}&action=set_status&id={order_id}&status=3"
-                response = requests.get(url)
-                result = response.json()
-                if result.get("status"):
-                    print(color_text(f"Order {order_id} berhasil diresend.", "green"))
-                else:
-                    print(color_text(f"Gagal resend order: {result['data'].get('msg')}", "red"))
-            else:
-                print(color_text("Aksi tidak dikenali.", "red"))
-
-        except (IndexError, ValueError):
-            print(color_text("Pilihan tidak valid.", "red"))
-
 def main_menu(api_key, service_id, operator):
     while True:
         # Tampilkan judul saat program dimulai
