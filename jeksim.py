@@ -39,8 +39,11 @@ def get_api_key():
     return api_key
 
 def create_order(api_key, service_id, operator):
-    quantity = int(input(color_text("Masukkan jumlah nomor yang ingin dipesan: ", "green")))
-
+    try:
+        quantity = int(input(color_text("Masukkan jumlah nomor yang ingin dipesan: ", "green")))
+    except ValueError:
+        print(color_text("Jumlah order harus berupa angka positif.", "red"))
+        return
     if quantity <= 0:
         print(color_text("Jumlah order harus berupa angka positif.", "red"))
         return
@@ -160,6 +163,53 @@ def cancel_or_resend_order(api_key):
         for idx, order in enumerate(orders, 1):
             print(color_text(f"{idx}. ID: {order['id']} | Nomor: {order['number']}", "green"))
 
+        # Meminta rentang order yang ingin dikelola
+        choice = input(color_text("Masukkan nomor order yang ingin dikelola (contoh 1-3): ", "green"))
+        action = input(color_text("Apa yang ingin Anda lakukan pada order tersebut:\n1. Cancel\n2. Resend\nPilihan (1/2): ", "green")).strip()
+
+        try:
+            # Memproses rentang yang dipilih
+            start, end = map(int, choice.split('-'))
+            selected_orders = orders[start - 1:end]  # Menyesuaikan indeks Python (mulai dari 0)
+
+            # Validasi aksi
+            if action not in ("1", "2"):
+                print(color_text("Pilihan aksi tidak valid.", "red"))
+                return
+
+            for order in selected_orders:
+                order_id = order["id"]
+
+                if action == "1":  # Cancel order
+                    url = f"https://virtusim.com/api/json.php?api_key={api_key}&action=set_status&id={order_id}&status=2"
+                    response = requests.get(url)
+                    result = response.json()
+                    if result.get("status"):
+                        print(color_text(f"Order {order_id} berhasil dibatalkan.", "green"))
+                    else:
+                        print(color_text(f"Gagal membatalkan order: {result['data'].get('msg')}", "red"))
+
+                elif action == "2":  # Resend order
+                    url = f"https://virtusim.com/api/json.php?api_key={api_key}&action=set_status&id={order_id}&status=3"
+                    response = requests.get(url)
+                    result = response.json()
+                    if result.get("status"):
+                        print(color_text(f"Order {order_id} berhasil diresend.", "green"))
+                    else:
+                        print(color_text(f"Gagal resend order: {result['data'].get('msg')}", "red"))
+
+        except (ValueError, IndexError):
+            print(color_text("Rentang atau pilihan tidak valid. Pastikan input sesuai format dan rentang order tersedia.", "red"))
+    else:
+        print(color_text("Tidak ada order aktif untuk dikelola.", "red"))
+
+    orders = get_active_orders(api_key)
+
+    if orders:
+        print(color_text("Daftar Order Aktif:", "green"))
+        for idx, order in enumerate(orders, 1):
+            print(color_text(f"{idx}. ID: {order['id']} | Nomor: {order['number']}", "green"))
+
         choice = input(color_text("Masukkan nomor order untuk Kelola (format: <nomor>): ", "green"))
         action = input(color_text("Ketik 'batal' untuk membatalkan atau 'resend' untuk mengirim ulang: ", "green")).lower()
 
@@ -199,7 +249,7 @@ def main_menu(api_key, service_id, operator):
         print(color_text("1. Pesan Nomor Baru", "green"))
         print(color_text("2. Cek Order Aktif", "green"))
         print(color_text("3. Kelola Order", "green"))
-        print(color_text("4. Monitoring SMS Masuk", "green"))
+        print(color_text("4. Monitoring SMS Masuk (Mulai Ulang Program jika ingin ke-menu)", "green"))
         print(color_text("5. Keluar", "green"))
 
         choice = input(color_text("Pilih opsi (1-5): ", "green"))
@@ -230,7 +280,7 @@ def main_menu(api_key, service_id, operator):
         elif choice == "4":
             monitor_sms(api_key)
         elif choice == "5":
-            print(color_text("cabut lu ngent*.", "yellow"))
+            print(color_text("Sayonaraaa!", "yellow"))
             break
         else:
             print(color_text("Pilihan tidak valid. Harap pilih antara 1-5.", "red"))
