@@ -135,14 +135,13 @@ def monitor_sms(api_key, interval=5, resend_interval=120):
                         print(color_text("SMS Baru Diterima:", "green"))
                         print(color_text(f"Nomor Urut: {sms_data['order_number']}", "cyan"))
                         print(color_text(f"Nomor: {sms_data['number']}", "cyan"))
-                        print(color_text(f"OrderId: {sms_data['order_id']}", "cyan"))
                         print(color_text(f"OTP: {sms_data['otp']}", "green"))
                         print(color_text(f"Service: {sms_data['service_name']}", "green"))
                         print(color_text("------------------------------------", "green"))
 
                     # Resend order jika waktu resend terpenuhi
                     if time.time() - last_resend_time >= resend_interval:
-                        print(color_text("Resend Order...", "green"))
+                        print(color_text(f"Resend Order untuk nomor {order['number']}...", "green"))
                         resend_order(api_key, order["id"])
 
             # Perbarui waktu terakhir melakukan resend
