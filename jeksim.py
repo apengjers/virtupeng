@@ -159,50 +159,56 @@ def monitor_sms(api_key, interval=5, resend_interval=120):
 def cancel_or_resend_order(api_key):
     orders = get_active_orders(api_key)
 
-    if orders:
-        print(color_text("Daftar Order Aktif:", "green"))
-        for idx, order in enumerate(orders, 1):
-            print(color_text(f"{idx}. ID: {order['id']} | Nomor: {order['number']}", "green"))
-
-        # Meminta rentang order yang ingin dikelola
-        choice = input(color_text("Masukkan nomor order yang ingin dikelola (contoh 1-3): ", "green"))
-        action = input(color_text("Apa yang ingin Anda lakukan pada order tersebut:\n1. Cancel\n2. Resend\nPilihan (1/2): ", "green")).strip()
-
-        try:
-            # Memproses rentang yang dipilih
-            start, end = map(int, choice.split('-'))
-            selected_orders = orders[start - 1:end]  # Menyesuaikan indeks Python (mulai dari 0)
-
-            # Validasi aksi
-            if action not in ("1", "2"):
-                print(color_text("Pilihan aksi tidak valid.", "red"))
-                return
-
-            for order in selected_orders:
-                order_id = order["id"]
-
-                if action == "1":  # Cancel order
-                    url = f"https://virtusim.com/api/json.php?api_key={api_key}&action=set_status&id={order_id}&status=2"
-                    response = requests.get(url)
-                    result = response.json()
-                    if result.get("status"):
-                        print(color_text(f"Order {order_id} berhasil dibatalkan.", "green"))
-                    else:
-                        print(color_text(f"Gagal membatalkan order: {result['data'].get('msg')}", "red"))
-
-                elif action == "2":  # Resend order
-                    url = f"https://virtusim.com/api/json.php?api_key={api_key}&action=set_status&id={order_id}&status=3"
-                    response = requests.get(url)
-                    result = response.json()
-                    if result.get("status"):
-                        print(color_text(f"Order {order_id} berhasil diresend.", "green"))
-                    else:
-                        print(color_text(f"Gagal resend order: {result['data'].get('msg')}", "red"))
-
-        except (ValueError, IndexError):
-            print(color_text("Rentang atau pilihan tidak valid. Pastikan input sesuai format dan rentang order tersedia.", "red"))
-    else:
+    if not orders:
         print(color_text("Tidak ada order aktif untuk dikelola.", "red"))
+        return
+
+    # Tampilkan daftar order
+    print(color_text("Daftar Order Aktif:", "green"))
+    for idx, order in enumerate(orders, 1):
+        print(color_text(f"{idx}. ID: {order['id']} | Nomor: {order['number']}", "green"))
+
+    # Meminta input untuk rentang dan aksi
+    choice = input(color_text("Masukkan nomor order yang ingin dikelola (contoh 1-3): ", "green")).strip()
+    action = input(color_text("Apa yang ingin Anda lakukan pada order tersebut:\n1. Cancel\n2. Resend\nPilihan (1/2): ", "green")).strip()
+
+    # Validasi awal input
+    valid_actions = {"1", "2"}
+    if action not in valid_actions:
+        print(color_text("Pilihan aksi tidak valid.", "red"))
+        return
+
+    try:
+        # Validasi dan parsing rentang input
+        start, end = map(int, choice.split('-'))
+        if start < 1 or end > len(orders) or start > end:
+            raise ValueError("Rentang tidak valid.")
+        selected_orders = orders[start - 1:end]
+    except ValueError:
+        print(color_text("Rentang atau format input tidak valid.", "red"))
+        return
+
+    # Aksi batch pada order yang dipilih
+    urls = []
+    for order in selected_orders:
+        order_id = order["id"]
+        status = "2" if action == "1" else "3"  # Cancel = 2, Resend = 3
+        urls.append(f"https://virtusim.com/api/json.php?api_key={api_key}&action=set_status&id={order_id}&status={status}")
+
+    # Kirim semua request dalam batch
+    for url in urls:
+        response = requests.get(url)
+        if response.status_code == 200:
+            result = response.json()
+            if result.get("status"):
+                action_text = "dibatalkan" if action == "1" else "diresend"
+                print(color_text(f"Order {result['data']['id']} berhasil {action_text}.", "green"))
+            else:
+                print(color_text(f"Gagal memproses order: {result['data'].get('msg')}", "red"))
+        else:
+            print(color_text(f"Gagal mengakses API untuk URL: {url}", "red"))
+
+    print(color_text("Proses selesai untuk semua order yang dipilih.", "green"))
 
 def main_menu(api_key, service_id, operator):
     while True:
@@ -219,6 +225,15 @@ def main_menu(api_key, service_id, operator):
         choice = input(color_text("Pilih opsi (1-5): ", "green"))
 
         if choice == "1":
+            print(color_text("Pilihan Layanan Operator:", "green"))
+            print(color_text("1. GOJEK", "green"))
+            print(color_text("2. WHATSAPP", "green"))
+            choice_service = input(color_text("Pilih Layanan (1/2): ", "green"))
+            if choice_service == "1":
+                service_id = "305"
+            elif choice_service == "2":
+                service_id = "6155"
+
             create_order(api_key, service_id, operator)
             backmenu = input(color_text("Ingin kembali ke menu ? (y/n) : ", "green"))
             if backmenu == "y":
@@ -250,9 +265,9 @@ def main_menu(api_key, service_id, operator):
             print(color_text("Pilihan tidak valid. Harap pilih antara 1-5.", "red"))
 
 # Ambil API Key
-default_service_id = "305"
+service_id = ""
 default_operator = "any"
 api_key = get_api_key()
 
 # Jalankan menu utama
-main_menu(api_key, default_service_id, default_operator)
+main_menu(api_key, service_id, default_operator)
