@@ -8,3 +8,6 @@ pip install requests<br>
 pkg install git<br>
 cd storage && git clone https://github.com/apengjers/jeksim<br>
 cd jeksim && python jeksim.py<br>
+
+# Mohon Gunakan dengan bijak
+# Request Update Order Nomor Hub Tele @apengjers
