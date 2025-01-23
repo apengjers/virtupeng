@@ -1,10 +1,10 @@
 # jeksim
 
-pkg update && pkg upgrade\n
-termux-setup-storage\n
-pkg install python\n
-pkg install python pip -y
-pip install requests
-pkg install git
-cd storage && git clone https://github.com/apengjers/jeksim
-cd jeksim && python jeksim.py
+pkg update && pkg upgrade<br>
+termux-setup-storage<br>
+pkg install python<br>
+pkg install python pip -y<br>
+pip install requests<br>
+pkg install git<br>
+cd storage && git clone https://github.com/apengjers/jeksim<br>
+cd jeksim && python jeksim.py<br>
