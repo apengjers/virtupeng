@@ -9,5 +9,5 @@ pkg install git<br>
 cd storage && git clone https://github.com/apengjers/jeksim<br>
 cd jeksim && python jeksim.py<br>
 
-# Mohon Gunakan dengan bijak
+# Mohon Gunakan dengan bijak ya
 # Request Update Order Nomor Hub Tele @apengjers
