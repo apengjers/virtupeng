@@ -5,6 +5,7 @@ termux-setup-storage<br>
 pkg install python<br>
 pkg install python pip -y<br>
 pip install requests<br>
+pip install pyarmor<br>
 pkg install git<br>
 cd storage && git clone https://github.com/apengjers/virtupeng<br>
 cd jeksim && python jeksim.py<br>
